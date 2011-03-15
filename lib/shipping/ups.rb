@@ -457,7 +457,10 @@ module Shipping
             b.ShipperNumber @ups_shipper_number
             b.Name @sender_name
             b.Address { |b|
-              b.AddressLine1 @sender_address unless @sender_address.blank?
+              address_splits = split_address @sender_address
+              b.AddressLine1 address_splits[0] unless address_splits[0].blank?
+              b.AddressLine2 address_splits[1] unless address_splits[1].blank?
+              b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @sender_zip
               b.CountryCode @sender_country unless @sender_country.blank?
               b.City @sender_city unless @sender_city.blank?
@@ -467,7 +470,10 @@ module Shipping
           b.ShipFrom { |b|
             b.CompanyName @sender_company
             b.Address { |b|
-              b.AddressLine1 @sender_address unless @sender_address.blank?
+              address_splits = split_address @sender_address
+              b.AddressLine1 address_splits[0] unless address_splits[0].blank?
+              b.AddressLine2 address_splits[1] unless address_splits[1].blank?
+              b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @sender_zip
               b.CountryCode @sender_country unless @sender_country.blank?
               b.City @sender_city unless @sender_city.blank?
@@ -476,8 +482,11 @@ module Shipping
           }
           b.ShipTo { |b|
             b.CompanyName @company
-            b.Address { |b|
-              b.AddressLine1 @address unless @address.blank?
+            b.Address { |b|              
+              address_splits = split_address @address
+              b.AddressLine1 address_splits[0] unless address_splits[0].blank?
+              b.AddressLine2 address_splits[1] unless address_splits[1].blank?
+              b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @zip
               b.CountryCode @country unless @country.blank?
               b.City @city unless @city.blank?
@@ -729,6 +738,18 @@ module Shipping
     end
 
     private
+
+    def split_address address
+      return [] if address.blank?
+      address.split.inject([]) do |splits, w| 
+        if splits.blank? or ((splits.last.length + w.length + 1) >= 35 )
+          splits << w.slice(0,35); 
+        else 
+          splits.last << " #{w}" 
+        end
+        splits
+      end
+    end
 
     def request_access
       @data = String.new
