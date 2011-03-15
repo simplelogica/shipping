@@ -42,6 +42,24 @@ Alternately, you can instantiate the base class and then see both UPS and FedEx 
     ship.city = "Portland"
     ship.ups.valid_address? => true
 
+== LOGGING
+
+Debugging requests and responses from the webservices can be done by sending a logger to the Shipping object
+
+    Shipping::Base.new(:logger => logger)
+
+The only requirement is that logger object responses to the method "debug".
+
+== RAILS
+
+Automatically detection of RAILS_ROOT/config/shipping.yml has been removed as it includes an unnecesary dependency to Rails and now must be included in the creation of the instance
+
+    Shipping::Base.new(:prefs => (RAILS_ROOT + "/config/shipping.yml"))
+
+Logging in Rails is very easy, just initialize the Shipping object with the Rails.logger
+
+    Shipping::Base.new(:prefs => (RAILS_ROOT + "/config/shipping.yml"), :logger => Rails.logger)
+
 == Authors    
 * Lucas Carlson  (mailto:lucas@rufy.com)
 * Jimmy Baker (mailto:jimmyebaker@gmail.com)
