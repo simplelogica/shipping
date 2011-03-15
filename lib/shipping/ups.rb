@@ -9,6 +9,7 @@ module Shipping
   class UPS < Base
     include REXML
     API_VERSION = "1.0001"
+    COUNTRIES_REQUIRING_PROVINCE = ["US", "CA", "IE"]
 
     # For current implementation (XML) docs, see http://www.ups.com/gec/techdocs/pdf/dtk_RateXML_V1.zip
     def price
@@ -24,6 +25,9 @@ module Shipping
 
       state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
       sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
+
+      state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@country)
+      sender_state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@sender_country)
 
       # With UPS need to send two xmls
       # First one to authenticate, second for the request
@@ -117,6 +121,9 @@ module Shipping
 
       state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
       sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
+
+      state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@country)
+      sender_state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@sender_country)
 
       # With UPS need to send two xmls
       # First one to authenticate, second for the request
@@ -279,6 +286,9 @@ module Shipping
       state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
       sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
 
+      state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@country)
+      sender_state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@sender_country)
+
       # With UPS need to send two xmls
       # First one to authenticate, second for the request
       b = request_access
@@ -382,6 +392,9 @@ module Shipping
         state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase) : @state
       end
       
+      state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@country)
+      sender_state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@sender_country)
+
       b = request_access
       b.instruct!
       
@@ -423,6 +436,9 @@ module Shipping
       state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
       sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
       
+      state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@country)
+      sender_state = nil unless COUNTRIES_REQUIRING_PROVINCE.include?(@sender_country)
+
       # make ConfirmRequest and get Confirm Response
       b = request_access
       b.instruct!
