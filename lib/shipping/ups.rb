@@ -737,6 +737,62 @@ module Shipping
       end
     end
 
+    # For current implementation (XML) docs, see http://www.ups.com/gec/techdocs/pdf/dtk_TrackXML_V1.zip
+    def track tracking_number
+      @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
+      @ups_tool = '/Track'
+
+      # With UPS need to send two xmls
+      # First one to authenticate, second for the request
+      b = request_access
+      b.instruct!
+
+      b.TrackRequest { |b| 
+        b.Request { |b|
+          b.RequestAction 'Track'
+          b.TransactionReference { |b|
+            b.ToolVersion API_VERSION
+          }
+          b.RequestOption 0
+        }
+        b.TrackingNumber tracking_number
+      }
+
+      get_response @ups_url + @ups_tool
+      
+      status = XPath.first(@response, "//TrackResponse/Response/ResponseStatusCode").text.to_i
+      raise ShippingError, get_error if status == 0
+
+          
+      tracking_info = {:activities => []}
+
+
+
+      XPath.each(@response, "//TrackResponse/Shipment/Package/Activity") do |activity|
+        tracking_info[:activities] << {}
+        tracking_info[:activities].last[:location] = {}
+        tracking_info[:activities].last[:location][:address] = {}
+        {:address_line1 => "AddressLine1", :address_line2 => "AddressLine2", :address_line3 => "AddressLine3", :city => "City", :state_province_code => "StateProvinceCode", :postal_code => "PostalCode", :country_code => "CountryCode"}.each do |hash_key, xml_element|
+          tracking_info[:activities].last[:location][:address][hash_key] = activity.get_elements("ActivityLocation/Address/#{xml_element}").first.text unless activity.get_elements("ActivityLocation/Address/#{xml_element}").first.blank?
+        end
+        tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusCode/Code").first.blank?
+        tracking_info[:activities].last[:date] = "#{activity.get_elements("Date").first.text} #{activity.get_elements("Time").first.text}".strip
+      end
+
+      current_status = XPath.first(@response, "/TrackResponse/Shipment/CurrentStatus/Code")
+      unless current_status.blank?
+        tracking_info[:current_status] = current_status.text
+      end
+
+      delivery_date = XPath.first(@response, "/TrackResponse/Shipment/DeliveryDetails/DeliveryDate")
+      unless delivery_date.blank?
+        tracking_info[:delivery_date] = "#{delivery_date.get_elements("Date").first.text} #{delivery_date.get_elements("Time").first.text}".strip
+      end
+
+      tracking_info
+
+    end
+
     private
 
     def split_address address

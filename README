@@ -2,6 +2,8 @@
 
 Shipping is a module that connects APIs for various shippers like UPS and FedEx. Shipping currently supports pricing, shipping, labeling and voiding for UPS and FedEx through their XML APIs.
 
+Tracking is also supported through UPS XML API.
+
 == Download
 
 * gem install shipping
