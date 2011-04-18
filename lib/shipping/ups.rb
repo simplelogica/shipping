@@ -738,7 +738,9 @@ module Shipping
     end
 
     # For current implementation (XML) docs, see http://www.ups.com/gec/techdocs/pdf/dtk_TrackXML_V1.zip
-    def track tracking_number
+    # Activity parameter is the value of RequestOption Element. 0 retrieves just the last activity, 1 retrieves all the activities.
+    # Additional values are explained in the XML WebService documentation
+    def track tracking_number, activity=1
       @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
       @ups_tool = '/Track'
 
@@ -753,7 +755,7 @@ module Shipping
           b.TransactionReference { |b|
             b.ToolVersion API_VERSION
           }
-          b.RequestOption 0
+          b.RequestOption activity
         }
         b.TrackingNumber tracking_number
       }
