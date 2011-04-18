@@ -786,9 +786,9 @@ module Shipping
         tracking_info[:current_status] = current_status.text
       end
 
-      delivery_date = XPath.first(@response, "/TrackResponse/Shipment/DeliveryDetails/DeliveryDate")
+      delivery_date = XPath.first(@response, "/TrackResponse/Shipment/EstimatedDeliveryDetails/Date")
       unless delivery_date.blank?
-        tracking_info[:delivery_date] = "#{delivery_date.get_elements("Date").first.text} #{delivery_date.get_elements("Time").first.text}".strip
+        tracking_info[:delivery_date] = "#{delivery_date.text}}".strip
       end
 
       tracking_info
