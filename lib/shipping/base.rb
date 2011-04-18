@@ -292,8 +292,8 @@ module Shipping
 				
         unless @logger.blank?
           request_id = Time.now.strftime "%FT%T"
-          @logger.debug  "#{request_id} SHIPPING Request #{uri}\n\n#{@data}" 
-          @logger.debug  "#{request_id} SHIPPING Response\n\n#{@response_plain}"
+          @logger.info  "#{request_id} SHIPPING Request #{uri}\n\n#{@data}" 
+          @logger.info  "#{request_id} SHIPPING Response\n\n#{@response_plain}"
         end
         def @response.plain; @response_plain; end
 			end
