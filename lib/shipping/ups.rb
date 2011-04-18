@@ -777,8 +777,8 @@ module Shipping
         {:address_line1 => "AddressLine1", :address_line2 => "AddressLine2", :address_line3 => "AddressLine3", :city => "City", :state_province_code => "StateProvinceCode", :postal_code => "PostalCode", :country_code => "CountryCode"}.each do |hash_key, xml_element|
           tracking_info[:activities].last[:location][:address][hash_key] = activity.get_elements("ActivityLocation/Address/#{xml_element}").first.text unless activity.get_elements("ActivityLocation/Address/#{xml_element}").first.blank?
         end
-        tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusCode/Code").first.blank?
-        tracking_info[:activities].last[:description] = activity.get_elements("Status/StatusType/Description").first.text unless activity.get_elements("Status/StatusCode/Description").first.blank?
+        tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusType/Code").first.blank?
+        tracking_info[:activities].last[:description] = activity.get_elements("Status/StatusType/Description").first.text unless activity.get_elements("Status/StatusType/Description").first.blank?
         tracking_info[:activities].last[:date] = "#{activity.get_elements("Date").first.text} #{activity.get_elements("Time").first.text}".strip
       end
 
