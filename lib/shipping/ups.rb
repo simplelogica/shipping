@@ -462,6 +462,7 @@ module Shipping
               b.AddressLine2 address_splits[1] unless address_splits[1].blank?
               b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @sender_zip
+              b.PhoneNumber @sender_phone
               b.CountryCode @sender_country unless @sender_country.blank?
               b.City @sender_city unless @sender_city.blank?
               b.StateProvinceCode sender_state unless sender_state.blank?
@@ -488,6 +489,7 @@ module Shipping
               b.AddressLine2 address_splits[1] unless address_splits[1].blank?
               b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @zip
+              b.PhoneNumber @phone
               b.CountryCode @country unless @country.blank?
               b.City @city unless @city.blank?
               b.StateProvinceCode state unless state.blank?
