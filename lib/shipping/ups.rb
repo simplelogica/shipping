@@ -782,6 +782,13 @@ module Shipping
         tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusType/Code").first.blank?
         tracking_info[:activities].last[:description] = activity.get_elements("Status/StatusType/Description").first.text unless activity.get_elements("Status/StatusType/Description").first.blank?
         tracking_info[:activities].last[:date] = "#{activity.get_elements("Date").first.text} #{activity.get_elements("Time").first.text}".strip
+        tracking_info[:activities].last[:signed_by] = activity.get_elements("Status/StatusType/SignedForByName").first.text unless  activity.get_elements("Status/StatusType/SignedForByName").first.blank?
+        if (activity.get_elements("Status/StatusType/SignatureImage/GraphicImage").first.present?)
+          signature = (activity.get_elements("Status/StatusType/SignatureImage/GraphicImage").first.text
+          tracking_info[:activities].last[:signature] = Tempfile.new("signature_#{tracking_number}_#{tracking_info[:activities].length}")
+          tracking_info[:activities].last[:signature].write Base64.decode64( signature )
+          tracking_info[:activities].last[:signature].rewind
+        end
       end
 
       current_status = XPath.first(@response, "/TrackResponse/Shipment/CurrentStatus/Code")
