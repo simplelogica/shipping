@@ -742,6 +742,7 @@ module Shipping
     # For current implementation (XML) docs, see http://www.ups.com/gec/techdocs/pdf/dtk_TrackXML_V1.zip
     # Activity parameter is the value of RequestOption Element. 0 retrieves just the last activity, 1 retrieves all the activities.
     # Additional values are explained in the XML WebService documentation
+    # You must send the requests to the production environment (https://onlinetools.ups.com/ups.app/xml) if you need signature images
     def track tracking_number, activity=1
       @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
       @ups_tool = '/Track'
@@ -766,29 +767,29 @@ module Shipping
       
       status = XPath.first(@response, "//TrackResponse/Response/ResponseStatusCode").text.to_i
       raise ShippingError, get_error if status == 0
-
           
       tracking_info = {:activities => []}
 
-
-
       XPath.each(@response, "//TrackResponse/Shipment/Package/Activity") do |activity|
+
         tracking_info[:activities] << {}
         tracking_info[:activities].last[:location] = {}
         tracking_info[:activities].last[:location][:address] = {}
         {:address_line1 => "AddressLine1", :address_line2 => "AddressLine2", :address_line3 => "AddressLine3", :city => "City", :state_province_code => "StateProvinceCode", :postal_code => "PostalCode", :country_code => "CountryCode"}.each do |hash_key, xml_element|
           tracking_info[:activities].last[:location][:address][hash_key] = activity.get_elements("ActivityLocation/Address/#{xml_element}").first.text unless activity.get_elements("ActivityLocation/Address/#{xml_element}").first.blank?
         end
+
+        tracking_info[:activities].last[:signed_by] = activity.get_elements("ActivityLocation/SignedForByName").first.text unless  activity.get_elements("ActivityLocation/SignedForByName").first.blank?
+        unless activity.get_elements("ActivityLocation/SignatureImage[ImageFormat/Code = 'GIF']/GraphicImage").blank?
+          tracking_info[:activities].last[:signature] = Tempfile.new("signature_#{tracking_number}_#{tracking_info[:activities].length}")
+          tracking_info[:activities].last[:signature].write  Base64.decode64(activity.get_elements("ActivityLocation/SignatureImage[ImageFormat/Code = 'GIF']/GraphicImage").first.text) 
+          tracking_info[:activities].last[:signature].rewind
+        end
+
         tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusType/Code").first.blank?
         tracking_info[:activities].last[:description] = activity.get_elements("Status/StatusType/Description").first.text unless activity.get_elements("Status/StatusType/Description").first.blank?
         tracking_info[:activities].last[:date] = "#{activity.get_elements("Date").first.text} #{activity.get_elements("Time").first.text}".strip
-        tracking_info[:activities].last[:signed_by] = activity.get_elements("Status/StatusType/SignedForByName").first.text unless  activity.get_elements("Status/StatusType/SignedForByName").first.blank?
-        if (activity.get_elements("Status/StatusType/SignatureImage/GraphicImage").first.present?)
-          signature = (activity.get_elements("Status/StatusType/SignatureImage/GraphicImage").first.text
-          tracking_info[:activities].last[:signature] = Tempfile.new("signature_#{tracking_number}_#{tracking_info[:activities].length}")
-          tracking_info[:activities].last[:signature].write Base64.decode64( signature )
-          tracking_info[:activities].last[:signature].rewind
-        end
+
       end
 
       current_status = XPath.first(@response, "/TrackResponse/Shipment/CurrentStatus/Code")
