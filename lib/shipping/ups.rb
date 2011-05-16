@@ -788,6 +788,7 @@ module Shipping
 
         tracking_info[:activities].last[:status] = activity.get_elements("Status/StatusType/Code").first.text unless activity.get_elements("Status/StatusType/Code").first.blank?
         tracking_info[:activities].last[:description] = activity.get_elements("Status/StatusType/Description").first.text unless activity.get_elements("Status/StatusType/Description").first.blank?
+        tracking_info[:activities].last[:code] = activity.get_elements("Status/StatusCode/Code").first.text unless activity.get_elements("Status/StatusCode/Code").first.blank?
         tracking_info[:activities].last[:date] = "#{activity.get_elements("Date").first.text} #{activity.get_elements("Time").first.text}".strip
 
       end
