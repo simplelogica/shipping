@@ -430,6 +430,11 @@ module Shipping
       @required = [:ups_license_number, :ups_shipper_number, :ups_user, :ups_password]
       @required +=  [:phone, :email, :company, :address, :city, :state, :zip]
       @required += [:sender_phone, :sender_email, :sender_company, :sender_address, :sender_city, :sender_state, :sender_zip ]
+
+      unless @return_service_code.nil?
+        @required += [:package_description]
+      end
+
       @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
       @ups_tool = '/ShipConfirm'
       
@@ -538,6 +543,9 @@ module Shipping
             b.Code ServiceTypes[@service_type] || '03' # defaults to ground
           }
           b.Package { |b| # Package Details         
+            unless @return_service_code.nil?
+              b.Description @package_description
+            end
             b.PackagingType { |b|
               b.Code PackageTypes[@packaging_type] || '02' # defaults to 'your packaging'
               b.Description 'Package'
