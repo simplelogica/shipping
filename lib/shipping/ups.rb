@@ -448,11 +448,16 @@ module Shipping
           b.RequestAction "ShipConfirm"
           b.RequestOption "nonvalidate"
           b.TransactionReference { |b|
-            b.CustomerContext "#{@city}, #{state} #{@zip}"
+            b.CustomerContext "#{@city}, #{@state} #{@zip}"
             b.XpciVersion API_VERSION
           }
         }
         b.Shipment { |b|
+          unless @return_service_code.nil?
+            b.ReturnService { |b|
+              b.Code @return_service_code
+            }
+          end
           b.Shipper { |b|
             b.ShipperNumber @ups_shipper_number
             b.Name @sender_name
