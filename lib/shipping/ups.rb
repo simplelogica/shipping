@@ -493,13 +493,13 @@ module Shipping
           }
           b.ShipTo { |b|
             b.CompanyName @company
+            b.PhoneNumber @phone
             b.Address { |b|              
               address_splits = split_address @address
               b.AddressLine1 address_splits[0] unless address_splits[0].blank?
               b.AddressLine2 address_splits[1] unless address_splits[1].blank?
               b.AddressLine3 address_splits[2] unless address_splits[2].blank?
               b.PostalCode @zip
-              b.PhoneNumber @phone
               b.CountryCode @country unless @country.blank?
               b.City @city unless @city.blank?
               b.StateProvinceCode state unless state.blank?
