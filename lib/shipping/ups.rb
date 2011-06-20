@@ -479,7 +479,7 @@ module Shipping
             }
           }
           b.ShipFrom { |b|
-            b.CompanyName @sender_company
+            b.CompanyName @sender_company[0,35]
             b.Address { |b|
               address_splits = split_address @sender_address
               b.AddressLine1 address_splits[0] unless address_splits[0].blank?
