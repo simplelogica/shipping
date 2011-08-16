@@ -431,13 +431,23 @@ module Shipping
       @required +=  [:phone, :email, :company, :address, :city, :state, :zip]
       @required += [:sender_phone, :sender_email, :sender_company, :sender_address, :sender_city, :sender_state, :sender_zip ]
 
-      unless @return_service_code.nil?
-        @required += [:package_description]
-      end
-
       @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
       @ups_tool = '/ShipConfirm'
       
+      @packages ||= []
+      if @packages.blank?
+        @packages << { :description => @package_description, 
+          :type => @packaging_type, 
+          :weight => { :weight => @weight, :units => @weight_units},
+          :measure => {
+            :units => @measure_units, 
+            :length => @measure_length,
+            :width => @measure_width,
+            :height =>  @measure_height },
+          :insurance => {:currency => @currency_code, :value => @insured_value }
+          }
+      end
+
       state = STATES.has_value?(@state.downcase) ? STATES.index(@state.downcase).upcase : @state.upcase unless @state.blank?
       sender_state = STATES.has_value?(@sender_state.downcase) ? STATES.index(@sender_state.downcase).upcase : @sender_state.upcase unless @sender_state.blank?
       
@@ -542,35 +552,37 @@ module Shipping
           b.Service { |b| # The service code
             b.Code ServiceTypes[@service_type] || '03' # defaults to ground
           }
-          b.Package { |b| # Package Details         
-            unless @return_service_code.nil?
-              b.Description @package_description
-            end
-            b.PackagingType { |b|
-              b.Code PackageTypes[@packaging_type] || '02' # defaults to 'your packaging'
-              b.Description 'Package'
+          @packages.each do |package|
+            b.Package { |b| # Package Details         
+              unless @return_service_code.nil?
+                b.Description package[:description]
+              end
+              b.PackagingType { |b|
+                b.Code PackageTypes[package[:type]] || '02' # defaults to 'your packaging'
+                b.Description 'Package'
+              }
+              b.PackageWeight { |b|
+                b.Weight package[:weight][:weight]
+                b.UnitOfMeasurement { |b|
+                  b.Code package[:weight][:units] || 'LBS' # or KGS
+                }
+              }
+              b.Dimensions { |b|
+                b.UnitOfMeasurement { |b|
+                  b.Code package[:measure][:units] || 'IN'
+                }
+                b.Length  package[:measure][:length] || 0
+                b.Width  package[:measure][:width] || 0
+                b.Height  package[:measure][:height] || 0
+              } if  package[:measure][:length] ||  package[:measure][:width] || package[:measure][:height]
+              b.PackageServiceOptions { |b|
+                b.InsuredValue { |b|
+                  b.CurrencyCode package[:insurance][:currency] || 'US'
+                  b.MonetaryValue package[:insurance][:value]
+                }
+              } if package[:insurance][:value]
             }
-            b.PackageWeight { |b|
-              b.Weight @weight
-              b.UnitOfMeasurement { |b|
-                b.Code @weight_units || 'LBS' # or KGS
-              }
-            }
-            b.Dimensions { |b|
-              b.UnitOfMeasurement { |b|
-                b.Code @measure_units || 'IN'
-              }
-              b.Length @measure_length || 0
-              b.Width @measure_width || 0
-              b.Height @measure_height || 0
-            } if @measure_length || @measure_width || @measure_height
-            b.PackageServiceOptions { |b|
-              b.InsuredValue { |b|
-                b.CurrencyCode @currency_code || 'US'
-                b.MonetaryValue @insured_value
-              }
-            } if @insured_value
-          }
+          end
         }
         b.LabelSpecification { |b|
           image_type = @image_type || 'GIF' # default to GIF
