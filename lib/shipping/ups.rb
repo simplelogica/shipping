@@ -574,13 +574,13 @@ module Shipping
                 b.Length  package[:measure][:length] || 0
                 b.Width  package[:measure][:width] || 0
                 b.Height  package[:measure][:height] || 0
-              } if  package[:measure][:length] ||  package[:measure][:width] || package[:measure][:height]
+              } if  package[:measure] && (package[:measure][:length] ||  package[:measure][:width] || package[:measure][:height])
               b.PackageServiceOptions { |b|
                 b.InsuredValue { |b|
                   b.CurrencyCode package[:insurance][:currency] || 'US'
                   b.MonetaryValue package[:insurance][:value]
                 }
-              } if package[:insurance][:value]
+              } if package[:insurance] && package[:insurance][:value]
             }
           end
         }
