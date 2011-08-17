@@ -634,7 +634,7 @@ module Shipping
       # get AcceptResponse
       get_response @ups_url + @ups_tool
       
-      # begin  
+      begin  
         response = Hash.new       
         response[:tracking_number] = REXML::XPath.first(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults/TrackingNumber").text
         response[:labels] = []
@@ -645,9 +645,9 @@ module Shipping
           response[:labels].last[:image].write Base64.decode64( response[:labels].last[:encoded_image] )
           response[:labels].last[:image].rewind
         end
-      # rescue
-      #   raise ShippingError, get_error
-      # end
+      rescue
+        raise ShippingError, get_error
+      end
 
       # allows for things like fedex.label.url
       def response.method_missing(name, *args)
