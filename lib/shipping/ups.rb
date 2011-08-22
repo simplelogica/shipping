@@ -636,14 +636,16 @@ module Shipping
       
       begin  
         response = Hash.new       
+
         response[:tracking_number] = REXML::XPath.first(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults/TrackingNumber").text
-        response[:labels] = []
-        REXML::XPath.each(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults/LabelImage/GraphicImage") do |image_element|
-          response[:labels] << {}
-          response[:labels].last[:encoded_image] = image_element.text
-          response[:labels].last[:image] = Tempfile.new("shipping_label_#{Time.now}_#{Time.now.usec}")
-          response[:labels].last[:image].write Base64.decode64( response[:labels].last[:encoded_image] )
-          response[:labels].last[:image].rewind
+        response[:packages] = []
+        REXML::XPath.each(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults") do |package_element|
+          response[:packages] << {}
+          response[:packages].last[:tracking_number] = REXML::XPath.first(package_element, "TrackingNumber").text
+          response[:packages].last[:encoded_label] = REXML::XPath.first(package_element, "LabelImage/GraphicImage").text
+          response[:packages].last[:label_file] = Tempfile.new("shipping_label_#{Time.now}_#{Time.now.usec}")
+          response[:packages].last[:label_file].write Base64.decode64( response[:packages].last[:encoded_label] )
+          response[:packages].last[:label_file].rewind
         end
       rescue
         raise ShippingError, get_error
