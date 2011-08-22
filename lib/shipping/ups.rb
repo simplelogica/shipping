@@ -637,7 +637,6 @@ module Shipping
       begin  
         response = Hash.new       
 
-        response[:tracking_number] = REXML::XPath.first(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults/TrackingNumber").text
         response[:packages] = []
         REXML::XPath.each(@response, "//ShipmentAcceptResponse/ShipmentResults/PackageResults") do |package_element|
           response[:packages] << {}
