@@ -502,6 +502,7 @@ module Shipping
             }
           }
           b.ShipTo { |b|
+            b.AttentionName @attention_name
             b.CompanyName @company
             b.PhoneNumber @phone
             b.Address { |b|              
