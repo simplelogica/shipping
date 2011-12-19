@@ -434,6 +434,7 @@ module Shipping
       @ups_url ||= "https://wwwcie.ups.com/ups.app/xml"
       @ups_tool = '/ShipConfirm'
       
+      @reference_numbers ||=[]
       @packages ||= []
       if @packages.blank?
         @packages << { :description => @package_description, 
@@ -584,6 +585,12 @@ module Shipping
               } if package[:insurance] && package[:insurance][:value]
             }
           end
+          @reference_numbers.each do |reference_number|
+            b.ReferenceNumber do |reference|
+              reference.Value reference_number
+            end
+          end
+
         }
         b.LabelSpecification { |b|
           image_type = @image_type || 'GIF' # default to GIF
