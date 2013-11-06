@@ -13,6 +13,9 @@ module Shipping
 	class Base
 		attr_reader :data, :response, :plain_response, :required, :services
 
+    attr_writer :seur_user, :seur_password, :nif, :seur_franquicia, :seur_ccc, :seur_integracion, :cod_socio
+    attr_writer :phone_extension, :type_street
+    
 		attr_writer :ups_license_number, :ups_shipper_number, :ups_user, :ups_password, :ups_url, :ups_tool
 		attr_writer :fedex_account, :fedex_meter, :fedex_url, :fedex_package_weight_limit_in_lbs
 
@@ -31,27 +34,39 @@ module Shipping
 
 		def initialize(options = {})
 			prefs = File.expand_path(options[:prefs] || "~/.shipping.yml")
-			YAML.load(File.open(prefs)).each {|pref, value| eval("@#{pref} = #{value.inspect}")} if File.exists?(prefs)
+      if File.exists?(prefs)
+        if self.class.name == 'Shipping::SEUR'
+          seur_credentials = YAML.load(File.open(prefs))
+          seur_credentials["seur_#{options[:socio]}"].each {|pref, value| eval("@#{pref} = #{value.inspect}")}
+        else
+          YAML.load(File.open(prefs)).each {|pref, value| eval("@#{pref} = #{value.inspect}")}
+        end
+      end
 
 			@required = Array.new
 			@services = Array.new
-
 			# include all provided data
-			options.each do |method, value| 
+			options.each do |method, value|
 				instance_variable_set("@#{method}", value)
 			end
-			
+
 			case options[:carrier]
 		  when "fedex"
 		    fedex
 	    when "ups"
 	      ups
+      when "seur"
+        seur
       when nil
       else
         raise ShippingError, "unknown service"
       end
 		end
 
+    # Initializes an instance of Shipping::Seur with the same instance variables as the base objec
+    def seur
+      Shipping::SEUR.new prepare_vars
+    end
 		# Initializes an instance of Shipping::FedEx with the same instance variables as the base object
 		def fedex
 			Shipping::FedEx.new prepare_vars
@@ -91,7 +106,7 @@ module Shipping
         total_weight = @quantity.to_f * @weight_each
         itemized = false
       end
-  
+      
       max_weight = @max_weight || 150 # Fed Ex and UPS commercial max
       max_quantity = @max_quantity || @quantity
       variation_threshold = @variation_threshold || 0.1 # default to 10% variation (e.g. 10 items, 10 each)
@@ -275,7 +290,40 @@ module Shipping
 				h = eval(%q{instance_variables.map {|var| "#{var.gsub("@",":")} => #{eval(var+'.inspect')}"}.join(", ").chomp(", ")})
 				return eval("{#{h}}")
 			end
+      
+      def get_seur_response(url, action, namespaceIdentifier)
+        client = Savon.client(
+          :wsdl => url,
+          # :namespaces => [],
+          # :element_form_default => :unqualified,
+          # :namespaces => {"xmlns:first" => "http://someURL.pt/Test1"},
+          # :env_namespace => :soapenv,
+          :ssl_verify_mode => :none,
+          :namespace_identifier => namespaceIdentifier,
+          :filters => [:password],
+          :pretty_print_xml => true,
+          :raise_errors => false
+        )
+        response = client.call(action.to_sym, :xml => @data)
 
+        unless @logger.blank?
+          request_id = Time.now.strftime "%FT%T"
+          @logger.info  "#{request_id} SHIPPING SEUR Request #{url}\n\n#{@data}" 
+          @logger.info  "#{request_id} SHIPPING SEUR Response\n\n#{response.to_hash.inspect}"
+        end
+
+        seur_response = response.to_hash
+
+        tempLabel = Tempfile.new("shipping_label_#{Time.now}_#{Time.now.usec}")
+        tempLabel.write Base64.decode64(seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:pdf])
+        tempLabel.rewind
+
+        {
+          :pdf => tempLabel,
+          :ecbs => seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:ecb],
+          :tracking_number => 
+        }.to_hash
+      end
 			# Goes out, posts the data, and sets the @response variable with the information
 			def get_response(url)
 				check_required
