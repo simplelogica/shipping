@@ -321,7 +321,7 @@ module Shipping
         {
           :pdf => tempLabel,
           :ecbs => seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:ecb],
-          :tracking_number => 
+          :tracking_number => @packages
         }.to_hash
       end
 			# Goes out, posts the data, and sets the @response variable with the information
