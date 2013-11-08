@@ -70,7 +70,7 @@ module Shipping
       end
       
       @data = sendXML
-      # @logger.debug("SEUR Track:#{@data}")
+      @logger.debug("SEUR_DATA:#{@data}")
       get_seur_response('http://cit.seur.com/CIT-war/services/ImprimirECBWebService?wsdl', 'impresion_integracion_pdf_con_ecbws', 'imp')
     end
     
