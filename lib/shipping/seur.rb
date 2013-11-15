@@ -70,10 +70,6 @@ module Shipping
       end
 
       @data = sendXML
-<<<<<<< Updated upstream
-      # @logger.debug("SEUR Track:#{@data}")
-=======
->>>>>>> Stashed changes
       get_seur_response('http://cit.seur.com/CIT-war/services/ImprimirECBWebService?wsdl', 'impresion_integracion_pdf_con_ecbws', 'imp')
     end
 
