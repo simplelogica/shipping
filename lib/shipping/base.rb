@@ -325,7 +325,7 @@ module Shipping
           doc.xpath("//SIT").each do |activity|
             description = activity.xpath('DESCRIPCION_CLIENTE').text
             json = {
-              :data => activity.xpath('FECHA_SITUACION').text,
+              :date => activity.xpath('FECHA_SITUACION').text,
               :description => description
             }.to_hash
 
