@@ -320,8 +320,6 @@ module Shipping
             :tracking_number => @packages
           }.to_hash
         else
-          #DateTime.strptime(activity[:date]), :status => activity[:status], :description => activity[:description]
-          #{:in_transit => "I", :delivered => "D", :exception => "X", :pickup => "P", :manifest => "M"}
           activities = []
           doc = Nokogiri::XML seur_response[:consulta_listado_expediciones_str_response][:out]
           doc.xpath("//SIT").each do |activity|
