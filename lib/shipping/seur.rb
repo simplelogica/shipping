@@ -68,31 +68,45 @@ module Shipping
         end
         xmlBuilder.target!
       end
-      
+
       @data = sendXML
+<<<<<<< HEAD
       @logger.debug("SEUR_DATA:#{@data}")
+=======
+>>>>>>> refs/heads/features/seur
       get_seur_response('http://cit.seur.com/CIT-war/services/ImprimirECBWebService?wsdl', 'impresion_integracion_pdf_con_ecbws', 'imp')
     end
-    
-    def checkExpeditions
-      @data = {
-        :in0 => @expeditionType,
-        :in1 => @expeditionID,
-        :in2 => @trackingID,
-        :in3 => @referenceID,
-        :in4 => @ccc,             #Por defecto busca en todos los CCC's del cliente si no se pone nada. El formato de la cadena es ‘<CCC1>’,’<CCC2>’,...
-        :in5 => @fromDate,        #formato dd-mm-yyyy
-        :in6 => @toDate,          #formato dd-mm-yyyy
-        :in7 =>@situation,        #Si es vacio devuelve todas las situaciones TODO Obtener las situaciones del Sistema Maestro de Seur
-        :in8 => @name,            #Origen o Destino segun @expeditionType
-        :in9 => @city,            #Origen o Destino segun @expeditionType
-        :in10 => @ecb,
-        :in11 => @changeService,  # 1 = seleccionado, 0 = no seleccionado
-        :in12 => @seur_user,
-        :in13 => @seur_password,
-        :in14 => @requestType     #S = pública N = privada
-      }
-      get_seur_response("https://ws.seur.com/webseur/services/WSConsultaExpediciones?wsdl", 'consulta_listado_expediciones_str', 'con')
+
+    def track referencia_expedicion
+      sendXML = String.new
+      xmlBuilder = Builder::XmlMarkup.new :target => sendXML
+      xmlBuilder.instruct! :xml, :version=>"1.0", :encoding=>"UTF-8"
+      xmlBuilder.tag!("soapenv:Envelope", "xmlns:soapenv" => "http://schemas.xmlsoap.org/soap/envelope/", 'xmlns:con' => 'http://consultaExpediciones.servicios.webseur') do
+        xmlBuilder.tag!('soapenv:Header')
+        xmlBuilder.tag!('soapenv:Body') do
+          xmlBuilder.tag!('con:consultaListadoExpedicionesStr') do
+            xmlBuilder.con :in0, 'S'
+            xmlBuilder.con :in1, nil
+            xmlBuilder.con :in2, nil
+            xmlBuilder.con :in3, referencia_expedicion
+            xmlBuilder.con :in4, nil
+            xmlBuilder.con :in5, nil
+            xmlBuilder.con :in6, nil
+            xmlBuilder.con :in7, nil
+            xmlBuilder.con :in8, nil
+            xmlBuilder.con :in9, nil
+            xmlBuilder.con :in10, nil
+            xmlBuilder.con :in11, nil
+            xmlBuilder.con :in12, @seur_user
+            xmlBuilder.con :in13, @seur_password
+            xmlBuilder.con :in14, 'S'
+          end
+        end
+      end
+      xmlBuilder.target!
+      @data = sendXML
+
+      get_seur_response('https://ws.seur.com/webseur/services/WSConsultaExpediciones?wsdl', 'consulta_listado_expediciones_str', 'con')
     end
   end
 end
