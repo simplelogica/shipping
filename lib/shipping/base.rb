@@ -15,7 +15,7 @@ module Shipping
 
     attr_writer :seur_user, :seur_password, :nif, :seur_franquicia, :seur_ccc, :seur_integracion, :cod_socio
     attr_writer :phone_extension, :type_street
-    
+
 		attr_writer :ups_license_number, :ups_shipper_number, :ups_user, :ups_password, :ups_url, :ups_tool
 		attr_writer :fedex_account, :fedex_meter, :fedex_url, :fedex_package_weight_limit_in_lbs
 
@@ -25,11 +25,11 @@ module Shipping
 		attr_accessor :weight, :weight_units, :insured_value, :declared_value, :transaction_type, :description
 		attr_accessor :measure_units, :measure_length, :measure_width, :measure_height
 		attr_accessor :package_total, :packaging_type, :service_type
-		
+
 		attr_accessor :price, :discount_price, :eta, :time_in_transit
 
 		attr_accessor :ship_date, :dropoff_type, :pay_type, :currency_code, :image_type, :label_type
-    
+
     attr_accessor :weight_each, :quantity, :max_weight, :max_quantity, :items
 
 		def initialize(options = {})
@@ -76,7 +76,7 @@ module Shipping
 		def ups
 			Shipping::UPS.new prepare_vars
 		end
-		
+
     # Attempt to package items in multiple boxes efficiently
     # This doesn't use the bin-packing algorithm, but instead attempts to mirror how people pack boxes
     # -- since people will most likely be packing them.
@@ -93,7 +93,7 @@ module Shipping
         props = @items.inject({:weights => [], :quantities => [], :total_weights => []}) {|h, item| h[:weights] << item[:weight];h[:quantities] << item[:quantity]; h[:total_weights] << item[:total_weight];h}
         @quantity = props[:quantities].sum
         total_weight = props[:total_weights].sum
-        
+
         # check to see if these are all the same weight
         if props[:weights].uniq.length == 1
           itemized = false
@@ -106,14 +106,14 @@ module Shipping
         total_weight = @quantity.to_f * @weight_each
         itemized = false
       end
-      
+
       max_weight = @max_weight || 150 # Fed Ex and UPS commercial max
       max_quantity = @max_quantity || @quantity
       variation_threshold = @variation_threshold || 0.1 # default to 10% variation (e.g. 10 items, 10 each)
       weight_threshold = @weight_threshold || 0.5 # default to half full
       quantity_threshold = @quantity_threshold || 0.5 #default to half full
       box = Array.new
-      
+
       # See if boxes should be divided by weight or number
       bw = total_weight / max_weight
       bq = @quantity.to_f / max_quantity
@@ -133,7 +133,7 @@ module Shipping
               this_num = [max, @max_quantity, item[:quantity]].min # should we pack by weight, number avail, or quantity
               this_weight = this_num * item[:weight]
               item[:quantity] -= this_num
-              
+
               # if we haven't met the threshold
               if (this_weight / @max_weight) <= weight_threshold and (this_num / @max_quantity) <= quantity_threshold
                 leftovers  << {:weight => this_weight, :quantity => this_num, :item => item[:id]}
@@ -148,7 +148,7 @@ module Shipping
 
         # Then, we pack all the leftovers
         leftover_box = {:weight => @max_weight, :quantity => @max_quantity}
-        this_box = {:weight => 0.0, :quantity => 0}       
+        this_box = {:weight => 0.0, :quantity => 0}
         leftovers.each do |item|
           for i in 1..item[:quantity]
             leftover_box[:weight] -= item[:weight]
@@ -172,7 +172,7 @@ module Shipping
         if this_box[:weight] > 0.0 and this_box[:quantity] > 0
           box << {:weight => this_box[:weight], :quantity => this_box[:quantity]}
         end
-                  
+
         inefficiency = box.length / min_boxes
 
       else # pack super efficiently
@@ -183,13 +183,13 @@ module Shipping
           box_weight = max_quantity * @weight_each
           box_quantity = max_quantity
         end
-        
+
         # fill the rest of the boxes
         num_boxes = min_boxes - 1
         (num_boxes).times do
           box << {:weight => box_weight, :quantity => box_quantity}
         end
-        
+
         # if there is an uneven number for packaging
         if @quantity % min_boxes != 0 or num_boxes == 0
           excess_q = @quantity - (box_quantity * num_boxes)
@@ -204,78 +204,78 @@ module Shipping
 		def self.state_from_zip(zip)
 			zip = zip.to_i
 			{
-				(99500...99929) => "AK", 
-				(35000...36999) => "AL", 
-				(71600...72999) => "AR", 
-				(75502...75505) => "AR", 
-				(85000...86599) => "AZ", 
-				(90000...96199) => "CA", 
-				(80000...81699) => "CO", 
-				(6000...6999) => "CT", 
-				(20000...20099) => "DC", 
-				(20200...20599) => "DC", 
-				(19700...19999) => "DE", 
-				(32000...33999) => "FL", 
-				(34100...34999) => "FL", 
-				(30000...31999) => "GA", 
-				(96700...96798) => "HI", 
-				(96800...96899) => "HI", 
-				(50000...52999) => "IA", 
-				(83200...83899) => "ID", 
-				(60000...62999) => "IL", 
-				(46000...47999) => "IN", 
-				(66000...67999) => "KS", 
-				(40000...42799) => "KY", 
-				(45275...45275) => "KY", 
-				(70000...71499) => "LA", 
-				(71749...71749) => "LA", 
-				(1000...2799) => "MA", 
-				(20331...20331) => "MD", 
-				(20600...21999) => "MD", 
-				(3801...3801) => "ME", 
-				(3804...3804) => "ME", 
-				(3900...4999) => "ME", 
-				(48000...49999) => "MI", 
-				(55000...56799) => "MN", 
-				(63000...65899) => "MO", 
-				(38600...39799) => "MS", 
-				(59000...59999) => "MT", 
-				(27000...28999) => "NC", 
-				(58000...58899) => "ND", 
-				(68000...69399) => "NE", 
-				(3000...3803) => "NH", 
-				(3809...3899) => "NH", 
-				(7000...8999) => "NJ", 
-				(87000...88499) => "NM", 
-				(89000...89899) => "NV", 
-				(400...599) => "NY", 
-				(6390...6390) => "NY", 
-				(9000...14999) => "NY", 
-				(43000...45999) => "OH", 
-				(73000...73199) => "OK", 
-				(73400...74999) => "OK", 
-				(97000...97999) => "OR", 
-				(15000...19699) => "PA", 
-				(2800...2999) => "RI", 
-				(6379...6379) => "RI", 
-				(29000...29999) => "SC", 
-				(57000...57799) => "SD", 
-				(37000...38599) => "TN", 
-				(72395...72395) => "TN", 
-				(73300...73399) => "TX", 
-				(73949...73949) => "TX", 
-				(75000...79999) => "TX", 
-				(88501...88599) => "TX", 
-				(84000...84799) => "UT", 
-				(20105...20199) => "VA", 
-				(20301...20301) => "VA", 
-				(20370...20370) => "VA", 
-				(22000...24699) => "VA", 
-				(5000...5999) => "VT", 
-				(98000...99499) => "WA", 
-				(49936...49936) => "WI", 
-				(53000...54999) => "WI", 
-				(24700...26899) => "WV", 
+				(99500...99929) => "AK",
+				(35000...36999) => "AL",
+				(71600...72999) => "AR",
+				(75502...75505) => "AR",
+				(85000...86599) => "AZ",
+				(90000...96199) => "CA",
+				(80000...81699) => "CO",
+				(6000...6999) => "CT",
+				(20000...20099) => "DC",
+				(20200...20599) => "DC",
+				(19700...19999) => "DE",
+				(32000...33999) => "FL",
+				(34100...34999) => "FL",
+				(30000...31999) => "GA",
+				(96700...96798) => "HI",
+				(96800...96899) => "HI",
+				(50000...52999) => "IA",
+				(83200...83899) => "ID",
+				(60000...62999) => "IL",
+				(46000...47999) => "IN",
+				(66000...67999) => "KS",
+				(40000...42799) => "KY",
+				(45275...45275) => "KY",
+				(70000...71499) => "LA",
+				(71749...71749) => "LA",
+				(1000...2799) => "MA",
+				(20331...20331) => "MD",
+				(20600...21999) => "MD",
+				(3801...3801) => "ME",
+				(3804...3804) => "ME",
+				(3900...4999) => "ME",
+				(48000...49999) => "MI",
+				(55000...56799) => "MN",
+				(63000...65899) => "MO",
+				(38600...39799) => "MS",
+				(59000...59999) => "MT",
+				(27000...28999) => "NC",
+				(58000...58899) => "ND",
+				(68000...69399) => "NE",
+				(3000...3803) => "NH",
+				(3809...3899) => "NH",
+				(7000...8999) => "NJ",
+				(87000...88499) => "NM",
+				(89000...89899) => "NV",
+				(400...599) => "NY",
+				(6390...6390) => "NY",
+				(9000...14999) => "NY",
+				(43000...45999) => "OH",
+				(73000...73199) => "OK",
+				(73400...74999) => "OK",
+				(97000...97999) => "OR",
+				(15000...19699) => "PA",
+				(2800...2999) => "RI",
+				(6379...6379) => "RI",
+				(29000...29999) => "SC",
+				(57000...57799) => "SD",
+				(37000...38599) => "TN",
+				(72395...72395) => "TN",
+				(73300...73399) => "TX",
+				(73949...73949) => "TX",
+				(75000...79999) => "TX",
+				(88501...88599) => "TX",
+				(84000...84799) => "UT",
+				(20105...20199) => "VA",
+				(20301...20301) => "VA",
+				(20370...20370) => "VA",
+				(22000...24699) => "VA",
+				(5000...5999) => "VT",
+				(98000...99499) => "WA",
+				(49936...49936) => "WI",
+				(53000...54999) => "WI",
+				(24700...26899) => "WV",
 				(82000...83199) => "WY"
 				}.each do |range, state|
 					return state if range.include? zip
@@ -290,14 +290,10 @@ module Shipping
 				h = eval(%q{instance_variables.map {|var| "#{var.gsub("@",":")} => #{eval(var+'.inspect')}"}.join(", ").chomp(", ")})
 				return eval("{#{h}}")
 			end
-      
+
       def get_seur_response(url, action, namespaceIdentifier)
         client = Savon.client(
           :wsdl => url,
-          # :namespaces => [],
-          # :element_form_default => :unqualified,
-          # :namespaces => {"xmlns:first" => "http://someURL.pt/Test1"},
-          # :env_namespace => :soapenv,
           :ssl_verify_mode => :none,
           :namespace_identifier => namespaceIdentifier,
           :filters => [:password],
@@ -308,22 +304,52 @@ module Shipping
 
         unless @logger.blank?
           request_id = Time.now.strftime "%FT%T"
-          @logger.info  "#{request_id} SHIPPING SEUR Request #{url}\n\n#{@data}" 
+          @logger.info  "#{request_id} SHIPPING SEUR Request #{url}\n\n#{@data}"
           @logger.info  "#{request_id} SHIPPING SEUR Response\n\n#{response.to_hash.inspect}"
         end
 
         seur_response = response.to_hash
+        if action == 'impresion_integracion_pdf_con_ecbws'
+          tempLabel = Tempfile.new("shipping_label_#{Time.now}_#{Time.now.usec}")
+          tempLabel.write Base64.decode64(seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:pdf])
+          tempLabel.rewind
 
-        tempLabel = Tempfile.new("shipping_label_#{Time.now}_#{Time.now.usec}")
-        tempLabel.write Base64.decode64(seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:pdf])
-        tempLabel.rewind
+          {
+            :pdf => tempLabel,
+            :ecbs => seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:ecb],
+            :tracking_number => @packages
+          }.to_hash
+        else
+          #DateTime.strptime(activity[:date]), :status => activity[:status], :description => activity[:description]
+          #{:in_transit => "I", :delivered => "D", :exception => "X", :pickup => "P", :manifest => "M"}
+          activities = []
+          doc = Nokogiri::XML seur_response[:consulta_listado_expediciones_str_response][:out]
+          doc.xpath("//SIT").each do |activity|
+            description = activity.xpath('DESCRIPCION_CLIENTE').text
+            json = {
+              :data => activity.xpath('FECHA_SITUACION').text,
+              :description => description
+            }.to_hash
 
-        {
-          :pdf => tempLabel,
-          :ecbs => seur_response[:impresion_integracion_pdf_con_ecbws_response][:out][:ecb],
-          :tracking_number => @packages
-        }.to_hash
+            case description
+            when  'EN TRANSITO'
+              json.store(:status, 'I')
+              activities << json
+            when 'MERCANCÍA EN REPARTO'
+              json.store(:status, 'P')
+              activities << json
+            when 'ENTREGA EFECTUADA'
+              json.store(:status, 'D')
+              activities << json
+            when 'INCIDENCIA' 
+              json.store(:status, 'X')
+              activities << json
+            end
+          end
+          activities
+        end
       end
+
 			# Goes out, posts the data, and sets the @response variable with the information
 			def get_response(url)
 				check_required
@@ -337,10 +363,10 @@ module Shipping
 				@response       = @response_plain.include?('<?xml') ? REXML::Document.new(@response_plain) : @response_plain
 
 				@response.instance_variable_set "@response_plain", @response_plain
-				
+
         unless @logger.blank?
           request_id = Time.now.strftime "%FT%T"
-          @logger.info  "#{request_id} SHIPPING Request #{uri}\n\n#{@data}" 
+          @logger.info  "#{request_id} SHIPPING Request #{uri}\n\n#{@data}"
           @logger.info  "#{request_id} SHIPPING Response\n\n#{@response_plain}"
         end
         def @response.plain; @response_plain; end
@@ -354,7 +380,7 @@ module Shipping
 			end
 
 			STATES = {"al" => "alabama", "ne" => "nebraska", "ak" => "alaska", "nv" => "nevada", "az" => "arizona", "nh" => "new hampshire", "ar" => "arkansas", "nj" => "new jersey", "ca" => "california", "nm" => "new mexico", "co" => "colorado", "ny" => "new york", "ct" => "connecticut", "nc" => "north carolina", "de" => "delaware", "nd" => "north dakota", "fl" => "florida", "oh" => "ohio", "ga" => "georgia", "ok" => "oklahoma", "hi" => "hawaii", "or" => "oregon", "id" => "idaho", "pa" => "pennsylvania", "il" => "illinois", "pr" => "puerto rico", "in" => "indiana", "ri" => "rhode island", "ia" => "iowa", "sc" => "south carolina", "ks" => "kansas", "sd" => "south dakota", "ky" => "kentucky", "tn" => "tennessee", "la" => "louisiana", "tx" => "texas", "me" => "maine", "ut" => "utah", "md" => "maryland", "vt" => "vermont", "ma" => "massachusetts", "va" => "virginia", "mi" => "michigan", "wa" => "washington", "mn" => "minnesota", "dc" => "district of columbia", "ms" => "mississippi", "wv" => "west virginia", "mo" => "missouri", "wi" => "wisconsin", "mt" => "montana", "wy" => "wyoming"}
-			
+
 			def self.initialize_for_fedex_service(xml)
         s = Shipping::Base.new
         s.fedex
