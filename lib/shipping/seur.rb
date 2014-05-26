@@ -38,6 +38,7 @@ module Shipping
               xmlPacketsBuilder.pais_consignatario @country
               xmlPacketsBuilder.telefono_consignatario @phone
               xmlPacketsBuilder.atencion_de nil
+              xmlPacketsBuilder.pesoBulto packet[:total_kilos]
               xmlPacketsBuilder.test_preaviso packet[:test_preaviso]
               xmlPacketsBuilder.test_reparto packet[:test_reparto]
               xmlPacketsBuilder.test_email packet[:test_email]
