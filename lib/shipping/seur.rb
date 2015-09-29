@@ -63,7 +63,7 @@ module Shipping
             xmlBuilder.imp :in3, 'JUGUETTOS.XML'
             xmlBuilder.imp :in4, @nif
             xmlBuilder.imp :in5, @seur_franquicia
-            xmlBuilder.imp :in6, -1
+            xmlBuilder.imp :in6, @seur_ccc
             xmlBuilder.imp :in7, 'JuguettosTHECOCKTAIL'
           end
         end
